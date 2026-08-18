@@ -1,3 +1,18 @@
+@php
+    // Function ditaruh langsung di sini (bukan di Helpers.php) supaya tidak
+    // tergantung composer dump-autoload di server. Selalu tersedia begitu
+    // blade ini dirender.
+    if (!function_exists('formatRupiahPDF')) {
+        function formatRupiahPDF($angka, $prefix = 'Rp')
+        {
+            $nominal = number_format($angka, 0, ',', '.');
+            return '<table class="rp-wrap"><tr>
+                            <td class="rp-prefix">' . $prefix . '</td>
+                            <td class="rp-value">' . $nominal . '</td>
+                        </tr></table>';
+        }
+    }
+@endphp
 <!DOCTYPE html>
 <html>
 
@@ -109,6 +124,27 @@
             page-break-inside: avoid;
         }
 
+        /* Tabel nested untuk format Rp rata kiri - angka rata kanan */
+        .rp-wrap {
+            width: 100%;
+            border: none;
+            border-collapse: collapse;
+        }
+
+        .rp-wrap td {
+            border: none;
+            padding: 0;
+        }
+
+        .rp-prefix {
+            text-align: left;
+            width: 30px;
+        }
+
+        .rp-value {
+            text-align: right;
+        }
+
         @media print {
             body {
                 padding: 0;
@@ -157,14 +193,14 @@
             <tr>
                 <td></td>
                 <td>Saldo Awal Cash</td>
-                <td class="text-right">Rp {{ number_format($cashAwal, 0, ',', '.') }}</td>
+                <td class="text-right">{!! formatRupiahPDF($cashAwal) !!}</td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
                 <td></td>
                 <td>Saldo Awal Rekening</td>
-                <td class="text-right">Rp {{ number_format($rekeningAwal, 0, ',', '.') }}</td>
+                <td class="text-right">{!! formatRupiahPDF($rekeningAwal) !!}</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -180,7 +216,7 @@
                 <td>Total Saldo Awal</td>
                 <td></td>
                 <td></td>
-                <td class="text-right">Rp {{ number_format($saldoAwal, 0, ',', '.') }}</td>
+                <td class="text-right">{!! formatRupiahPDF($saldoAwal) !!}</td>
             </tr>
 
             <!-- II. PEMASUKAN (DENGAN RUNNING TOTAL DI KOLOM SALDO) -->
@@ -188,24 +224,24 @@
                 <td class="text-center">II</td>
                 <td colspan="4">Pemasukan</td>
             </tr>
-            @php 
-                                $noPemasukan = 1;
+            @php
+                $noPemasukan = 1;
                 $runPemasukan = 0;
                 $daftarAreaNames = $areas->pluck('nama_area')->toArray();
             @endphp
 
             @foreach($areas as $area)
                 @if(($pemasukanPerArea[$area->nama_area] ?? 0) > 0)
-                    @php 
-                                        $nom = $pemasukanPerArea[$area->nama_area];
+                    @php
+                        $nom = $pemasukanPerArea[$area->nama_area];
                         $runPemasukan += $nom;
                     @endphp
                     <tr>
                         <td class="text-center">{{ $noPemasukan++ }}</td>
                         <td>Pembayaran Retail {{ $area->nama_area }}</td>
-                        <td class="text-right">Rp {{ number_format($nom, 0, ',', '.') }}</td>
+                        <td class="text-right">{!! formatRupiahPDF($nom) !!}</td>
                         <td></td>
-                        <td class="text-right">Rp {{ number_format($runPemasukan, 0, ',', '.') }}</td>
+                        <td class="text-right">{!! formatRupiahPDF($runPemasukan) !!}</td>
                     </tr>
                 @endif
             @endforeach
@@ -216,9 +252,9 @@
                     <tr>
                         <td class="text-center">{{ $noPemasukan++ }}</td>
                         <td>{{ $namaKey }}</td>
-                        <td class="text-right">Rp {{ number_format($nominalKey, 0, ',', '.') }}</td>
+                        <td class="text-right">{!! formatRupiahPDF($nominalKey) !!}</td>
                         <td></td>
-                        <td class="text-right">Rp {{ number_format($runPemasukan, 0, ',', '.') }}</td>
+                        <td class="text-right">{!! formatRupiahPDF($runPemasukan) !!}</td>
                     </tr>
                 @endif
             @endforeach
@@ -228,9 +264,9 @@
                 <tr>
                     <td class="text-center">{{ $noPemasukan++ }}</td>
                     <td>Pembayaran Kasbon Teknisi</td>
-                    <td class="text-right">Rp {{ number_format($kasbonMasuk, 0, ',', '.') }}</td>
+                    <td class="text-right">{!! formatRupiahPDF($kasbonMasuk) !!}</td>
                     <td></td>
-                    <td class="text-right">Rp {{ number_format($runPemasukan, 0, ',', '.') }}</td>
+                    <td class="text-right">{!! formatRupiahPDF($runPemasukan) !!}</td>
                 </tr>
             @endif
 
@@ -239,7 +275,7 @@
                 <td>Total Pemasukan</td>
                 <td></td>
                 <td></td>
-                <td class="text-right">Rp {{ number_format($totalDebet, 0, ',', '.') }}</td>
+                <td class="text-right">{!! formatRupiahPDF($totalDebet) !!}</td>
             </tr>
 
             <!-- III. PENGELUARAN (DENGAN RUNNING TOTAL NEGATIF DI KOLOM SALDO) -->
@@ -247,8 +283,8 @@
                 <td class="text-center">III</td>
                 <td colspan="4">Pengeluaran</td>
             </tr>
-            @php 
-                                $noPengeluaran = 1;
+            @php
+                $noPengeluaran = 1;
                 $runPengeluaran = 0;
             @endphp
             @foreach($pengeluaranPerKategori as $namaKat => $nominalKat)
@@ -258,8 +294,8 @@
                         <td class="text-center">{{ $noPengeluaran++ }}</td>
                         <td>{{ $namaKat }}</td>
                         <td></td>
-                        <td class="text-right">Rp {{ number_format($nominalKat, 0, ',', '.') }}</td>
-                        <td class="text-right">-Rp {{ number_format($runPengeluaran, 0, ',', '.') }}</td>
+                        <td class="text-right">{!! formatRupiahPDF($nominalKat) !!}</td>
+                        <td class="text-right">{!! formatRupiahPDF($runPengeluaran, '-Rp') !!}</td>
                     </tr>
                 @endif
             @endforeach
@@ -269,8 +305,8 @@
                     <td class="text-center">{{ $noPengeluaran++ }}</td>
                     <td>Kasbon Teknisi</td>
                     <td></td>
-                    <td class="text-right">Rp {{ number_format($kasbonKeluar, 0, ',', '.') }}</td>
-                    <td class="text-right">-Rp {{ number_format($runPengeluaran, 0, ',', '.') }}</td>
+                    <td class="text-right">{!! formatRupiahPDF($kasbonKeluar) !!}</td>
+                    <td class="text-right">{!! formatRupiahPDF($runPengeluaran, '-Rp') !!}</td>
                 </tr>
             @endif
 
@@ -279,17 +315,17 @@
                 <td>Total Pengeluaran</td>
                 <td></td>
                 <td></td>
-                <td class="text-right">-Rp
-                    {{ number_format($totalPengeluaranOperasional + $kasbonKeluar, 0, ',', '.') }}</td>
+                <td class="text-right">
+                    {!! formatRupiahPDF($totalPengeluaranOperasional + $kasbonKeluar, '-Rp') !!}
+                </td>
             </tr>
 
             <!-- TOTAL KEUANGAN RETAIL (BARIS KUNING CLIENT) -->
             <tr class="bold" style="background-color: #ffff00;">
                 <td colspan="2" class="center-total">TOTAL KEUANGAN RETAIL</td>
-                <td class="text-right">Rp {{ number_format($saldoAwal + $totalDebet, 0, ',', '.') }}</td>
-                <td class="text-right">Rp {{ number_format($totalPengeluaranOperasional + $kasbonKeluar, 0, ',', '.') }}
-                </td>
-                <td class="text-right">Rp {{ number_format($saldoAkhir, 0, ',', '.') }}</td>
+                <td class="text-right">{!! formatRupiahPDF($saldoAwal + $totalDebet) !!}</td>
+                <td class="text-right">{!! formatRupiahPDF($totalPengeluaranOperasional + $kasbonKeluar) !!}</td>
+                <td class="text-right">{!! formatRupiahPDF($saldoAkhir) !!}</td>
             </tr>
         </tbody>
     </table>
@@ -299,9 +335,19 @@
         <table>
             <thead>
                 <tr style="background-color: #f1f2f6;">
-                    <th colspan="3" class="text-center" style="padding: 2px; font-weight: bold;">
-                        Laporan Keuangan Retail - Posisi Saldo Akhir</th>
+                    <th colspan="3" class="text-center" style="padding: 4px; font-weight: bold;">
+                        <div>
+                            Laporan Keuangan Retail
+                        </div>
+
+                        <div style="font-size: 9.5px; font-weight: normal; margin-top: 2px;">
+                            Posisi Saldo Akhir &amp; Periode
+                            {{ \Carbon\Carbon::parse($mulai)->translatedFormat('d F Y') }} -
+                            {{ \Carbon\Carbon::parse($sampai)->translatedFormat('d F Y') }}
+                        </div>
+                    </th>
                 </tr>
+
                 <tr>
                     <th style="width: 25px;" class="text-center">No</th>
                     <th>Keterangan</th>
@@ -312,23 +358,24 @@
                 <tr>
                     <td class="text-center">1</td>
                     <td>Uang Cash di Operasional</td>
-                    <td class="text-right">Rp {{ number_format($saldoAwalCash ?? 0, 0, ',', '.') }}</td>
+                    <td class="text-right">{!! formatRupiahPDF($saldoAwalCash ?? 0) !!}</td>
                 </tr>
                 <tr>
                     <td class="text-center">2</td>
                     <td>Uang Cash dari Retail yang belum disetor ke Bank</td>
-                    <td class="text-right bold" style="color: #27ae60;">Rp
-                        {{ number_format($uangCashBelumDisetor ?? 0, 0, ',', '.') }}</td>
+                    <td class="text-right bold" style="color: #27ae60;">
+                        {!! formatRupiahPDF($uangCashBelumDisetor ?? 0) !!}
+                    </td>
                 </tr>
                 <tr>
                     <td class="text-center">3</td>
                     <td>Uang Retail di Rekening</td>
-                    <td class="text-right">Rp {{ number_format($uangRetailDiRekening ?? 0, 0, ',', '.') }}</td>
+                    <td class="text-right">{!! formatRupiahPDF($uangRetailDiRekening ?? 0) !!}</td>
                 </tr>
                 <tr class="bold" style="background-color: #ffff00;">
                     <td colspan="2" class="center-total">TOTAL KEUANGAN RETAIL</td>
-                    <td class="text-right">Rp
-                        {{ number_format(($saldoAwalCash + $uangCashBelumDisetor + $uangRetailDiRekening), 0, ',', '.') }}
+                    <td class="text-right">
+                        {!! formatRupiahPDF($saldoAwalCash + $uangCashBelumDisetor + $uangRetailDiRekening) !!}
                     </td>
                 </tr>
             </tbody>

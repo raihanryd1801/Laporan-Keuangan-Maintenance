@@ -30,7 +30,7 @@
                 <th>Lokasi / Area</th>
                 <th>Nama Teknisi / Pegawai</th>
                 <th>Keterangan</th>
-                <th>Nominal (Debet)</th>
+                <th style="text-align: center;">Nominal (Debet)</th>
             </tr>
         </thead>
         <tbody>
@@ -44,14 +44,14 @@
                     <td>{{ optional($row->area)->nama_area ?? 'Umum / Pusat' }}</td>
                     <td>{{ optional($row->user)->name ?? '-' }}</td>
                     <td>{{ $row->keterangan }}</td>
-                    <td>{{ $row->debet }}</td>
+                    <td style="text-align: center;">{{ $row->debet }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr style="font-weight: bold;">
                 <td colspan="6" align="right">TOTAL PEMASUKAN CASH:</td>
-                <td>{{ $sumCash }}</td>
+                <td style="text-align: center;">{{ $sumCash }}</td>
             </tr>
         </tfoot>
         <tr>
@@ -70,7 +70,7 @@
                 <th>Lokasi / Area</th>
                 <th>Nama Teknisi / Pegawai</th>
                 <th>Keterangan</th>
-                <th>Nominal (Debet)</th>
+                <th style="text-align: center;">Nominal (Debet)</th>
             </tr>
         </thead>
         <tbody>
@@ -84,14 +84,14 @@
                     <td>{{ optional($row->area)->nama_area ?? 'Umum / Pusat' }}</td>
                     <td>{{ optional($row->user)->name ?? '-' }}</td>
                     <td>{{ $row->keterangan }}</td>
-                    <td>{{ $row->debet }}</td>
+                    <td style="text-align: center;">{{ $row->debet }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr style="font-weight: bold;">
                 <td colspan="6" align="right">TOTAL PEMASUKAN TRANSFER:</td>
-                <td>{{ $sumTransfer }}</td>
+                <td style="text-align: center;">{{ $sumTransfer }}</td>
             </tr>
         </tfoot>
         <tr>
@@ -111,7 +111,7 @@
                 <th>Nama Teknisi / Pegawai</th>
                 <th>Metode</th>
                 <th>Keterangan</th>
-                <th>Nominal (Kredit)</th>
+                <th style="text-align: center;">Nominal (Kredit)</th>
             </tr>
         </thead>
         <tbody>
@@ -126,14 +126,14 @@
                     <td>{{ optional($row->user)->name ?? '-' }}</td>
                     <td>{{ optional($row->metodePembayaran)->nama_metode }}</td>
                     <td>{{ $row->keterangan }}</td>
-                    <td>{{ $row->kredit }}</td>
+                    <td style="text-align: center;">{{ $row->kredit }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr style="font-weight: bold;">
                 <td colspan="7" align="right">TOTAL PENGELUARAN:</td>
-                <td>{{ $sumKeluar }}</td>
+                <td style="text-align: center;">{{ $sumKeluar }}</td>
             </tr>
         </tfoot>
         <tr>
@@ -152,7 +152,7 @@
                 <th>Nama Teknisi</th>
                 <th>Metode</th>
                 <th>Keterangan</th>
-                <th>Nominal (Kredit)</th>
+                <th style="text-align: center;">Nominal (Kredit)</th>
             </tr>
         </thead>
         <tbody>
@@ -166,14 +166,14 @@
                     <td>{{ optional($row->user)->name }}</td>
                     <td>{{ optional($row->metodePembayaran)->nama_metode }}</td>
                     <td>{{ $row->keterangan }}</td>
-                    <td>{{ $row->kredit }}</td>
+                    <td style="text-align: center;">{{ $row->kredit }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr style="font-weight: bold;">
                 <td colspan="6" align="right">TOTAL KASBON:</td>
-                <td>{{ $sumKasbon }}</td>
+                <td style="text-align: center;">{{ $sumKasbon }}</td>
             </tr>
         </tfoot>
     </table>
