@@ -3,30 +3,30 @@
 
 @section('content')
     <div style="
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-                                min-height: 80vh;
-                                padding: 20px;
-                            ">
-        <div style="
-                                    width: 100%;
-                                    max-width: 750px;
-                                    background: #fff;
-                                    padding: 35px 40px;
-                                    border-radius: 12px;
-                                    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                    min-height: 80vh;
+                                    padding: 20px;
                                 ">
-            <h2 style="
-                                        font-size: 22px;
-                                        font-weight: 600;
-                                        color: #2c3e50;
-                                        margin-top: 0;
-                                        margin-bottom: 25px;
-                                        text-align: center;
-                                        border-bottom: 2px solid #ecf0f1;
-                                        padding-bottom: 15px;
+        <div style="
+                                        width: 100%;
+                                        max-width: 750px;
+                                        background: #fff;
+                                        padding: 35px 40px;
+                                        border-radius: 12px;
+                                        box-shadow: 0 6px 20px rgba(0,0,0,0.06);
                                     ">
+            <h2 style="
+                                            font-size: 22px;
+                                            font-weight: 600;
+                                            color: #2c3e50;
+                                            margin-top: 0;
+                                            margin-bottom: 25px;
+                                            text-align: center;
+                                            border-bottom: 2px solid #ecf0f1;
+                                            padding-bottom: 15px;
+                                        ">
                 Edit Data Transaksi
             </h2>
 
@@ -35,6 +35,7 @@
                 enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="origin_url" value="{{ $originUrl }}">
 
                 <!-- Tanggal -->
                 <div style="margin-bottom: 18px;">
@@ -182,32 +183,32 @@
                 <!-- Tombol Aksi -->
                 <div style="display: flex; gap: 12px;">
                     <button type="submit" style="
-                                                background: #f39c12;
-                                                color: white;
-                                                border: none;
-                                                padding: 12px 24px;
-                                                border-radius: 6px;
-                                                font-weight: 600;
-                                                font-size: 15px;
-                                                cursor: pointer;
-                                                flex: 1;
-                                                transition: background 0.2s;
-                                            " onmouseover="this.style.background='#e08e0b'"
+                                                    background: #f39c12;
+                                                    color: white;
+                                                    border: none;
+                                                    padding: 12px 24px;
+                                                    border-radius: 6px;
+                                                    font-weight: 600;
+                                                    font-size: 15px;
+                                                    cursor: pointer;
+                                                    flex: 1;
+                                                    transition: background 0.2s;
+                                                " onmouseover="this.style.background='#e08e0b'"
                         onmouseout="this.style.background='#f39c12'">
                         Simpan Perubahan
                     </button>
-                    <a href="{{ url()->previous() }}" style="
-                        text-decoration: none;
-                        background: #95a5a6;
-                        color: white;
-                        padding: 12px 24px;
-                        border-radius: 6px;
-                        font-weight: 600;
-                        font-size: 15px;
-                        text-align: center;
-                        flex: 0.5;
-                        transition: background 0.2s;
-                    " onmouseover="this.style.background='#7f8c8d'" onmouseout="this.style.background='#95a5a6'">
+                    <a href="{{ $originUrl }}" style="
+                            text-decoration: none;
+                            background: #95a5a6;
+                            color: white;
+                            padding: 12px 24px;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            font-size: 15px;
+                            text-align: center;
+                            flex: 0.5;
+                            transition: background 0.2s;
+                        " onmouseover="this.style.background='#7f8c8d'" onmouseout="this.style.background='#95a5a6'">
                         Batal / Kembali
                     </a>
                 </div>

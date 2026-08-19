@@ -619,7 +619,15 @@ class LaporanController extends Controller
         $users = User::all();
         $areas = Area::all();
 
-        return view('laporan.edit_transaksi', compact('transaksi', 'kategoris', 'metodes', 'users', 'areas'));
+        // Tangkap URL halaman asal (mis. /laporan/kasbon, /laporan/pengeluaran) SEKARANG,
+        // selagi url()->previous() masih benar. Nilai ini dikirim lewat hidden input
+        // di form supaya tetap akurat walau nanti di-submit via POST/PUT.
+        $originUrl = url()->previous();
+        if ($originUrl === url()->current()) {
+            $originUrl = '/laporan/keuangan';
+        }
+
+        return view('laporan.edit_transaksi', compact('transaksi', 'kategoris', 'metodes', 'users', 'areas', 'originUrl'));
     }
 
     public function updateTransaksi(Request $request, $id)
@@ -674,7 +682,8 @@ class LaporanController extends Controller
             'nota' => $namaFileNota, // Menyimpan nama file baru atau null jika dihapus
         ]);
 
-        return back()->with('success', 'Data transaksi & nota berhasil diperbarui!');
+        return redirect($request->input('origin_url', '/laporan/keuangan'))
+            ->with('success', 'Data transaksi & nota berhasil diperbarui!');
     }
     public function destroyTransaksi($id)
     {
