@@ -14,7 +14,9 @@
             Input</a>
     </div>
 
-    <form action="{{ url('/laporan/transaksi/simpan') }}" method="POST" style="max-width: 600px; margin: 0 auto;">
+    <!-- [BARU] Tambahkan enctype="multipart/form-data" agar bisa upload file -->
+    <form action="{{ url('/laporan/transaksi/simpan') }}" method="POST" style="max-width: 600px; margin: 0 auto;"
+        enctype="multipart/form-data">
         @csrf
 
         <div style="margin-bottom: 15px;">
@@ -121,6 +123,17 @@
             </div>
         </div>
 
+        <!-- [BARU] BAGIAN UPLOAD NOTA FISIK -->
+        <div style="margin-bottom: 20px; padding: 15px; border: 1px dashed #3498db; background-color: #ebf5fb; border-radius: 6px; display: none;"
+            id="div_nota">
+            <label id="label_nota" style="display: block; font-weight: bold; margin-bottom: 5px; color: #2980b9;">
+                Upload Bukti Nota / Dokumen Fisik (Opsional)
+            </label>
+            <input type="file" name="nota" id="nota" class="form-control" accept="image/jpeg, image/png, image/jpg"
+                style="width: 100%; padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; background: #fff;">
+            <small style="color: #7f8c8d; display: block; margin-top: 5px;">*Format gambar (JPG, PNG). Maksimal 2MB.</small>
+        </div>
+
         <button type="submit" id="btn_submit"
             style="width: 100%; padding: 12px; background-color: #2ecc71; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s;">
             Simpan Transaksi
@@ -185,6 +198,10 @@
             let selectMetode = document.getElementById('metode_pembayaran_id');
             let metodeHelper = document.getElementById('metode_helper');
 
+            // Elemen Form Upload Nota
+            let divNota = document.getElementById('div_nota');
+            let labelNota = document.getElementById('label_nota');
+
             function sesuaikanForm() {
                 let jenis = selectJenis.value;
 
@@ -192,6 +209,9 @@
                 divKategori.style.display = 'block';
                 selectKategori.required = true;
                 kategoriHelper.style.display = 'none';
+
+                // Sembunyikan form upload nota secara default, hanya tampil di pengeluaran/kasbon & mutasi
+                divNota.style.display = 'none';
 
                 // Pastikan opsi 'Cash' muncul kembali di Metode Pembayaran
                 Array.from(selectMetode.options).forEach(opt => {
@@ -214,6 +234,10 @@
                     // Ubah label Metode Pembayaran menjadi Bank Tujuan
                     labelMetode.innerHTML = "Pilih Bank Tujuan Saldo";
                     metodeHelper.style.display = "block";
+
+                    // Tampilkan field nota bukti setor bank
+                    divNota.style.display = 'block';
+                    labelNota.innerHTML = "Upload Bukti Setor / Transfer Bank (Opsional)";
 
                     // (Opsional) Sembunyikan 'Cash' dari pilihan bank tujuan karena tidak mungkin setor tunai dari tunai ke tunai
                     Array.from(selectMetode.options).forEach(opt => {
@@ -238,6 +262,10 @@
 
                     labelMetode.innerHTML = "Sumber Dana (Uang diambil dari mana?)";
                     metodeHelper.style.display = "none";
+
+                    // Tampilkan form upload nota untuk pengeluaran / kasbon teknisi
+                    divNota.style.display = 'block';
+                    labelNota.innerHTML = "Upload Bukti Nota Pengeluaran / Nota Kasbon (Opsional)";
 
                     if (inputKeterangan.value === 'Setor tunai penerimaan retail ke rekening Bank') {
                         inputKeterangan.value = '';

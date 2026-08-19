@@ -99,7 +99,7 @@
         <h3 style="margin-top: 10px; margin-bottom: 10px; color: #d35400; font-size: 16px;">▶ Rincian Kasbon</h3>
         <div
             style="background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); padding: 15px; overflow-x: auto; margin-bottom: 30px;">
-            <table style="width: 100%; min-width: 1200px; border-collapse: collapse; font-size: 13px;">
+            <table style="width: 100%; min-width: 1250px; border-collapse: collapse; font-size: 13px;">
                 <thead>
                     <tr style="background-color: #f1f2f6; border-top: 2px solid #333; border-bottom: 2px solid #333;">
                         <th style="width: 40px; text-align: center; padding: 10px;">No</th>
@@ -108,6 +108,8 @@
                         <th style="padding: 10px;">Metode</th>
                         <th style="padding: 10px;">Area</th>
                         <th style="padding: 10px;">Keterangan</th>
+                        <!-- [BARU] Kolom Bukti Nota -->
+                        <th style="width: 80px; text-align: center; padding: 10px;">Bukti Nota</th>
                         <th class="text-right" style="width: 130px; padding: 10px;">Kasbon Keluar</th>
                         <th class="text-right" style="width: 130px; padding: 10px;">Pembayaran</th>
                         <th class="text-right" style="width: 130px; padding: 10px;">Saldo Berjalan</th>
@@ -130,6 +132,17 @@
                             <td style="padding: 10px;">{{ optional($row->metodePembayaran)->nama_metode ?? '-' }}</td>
                             <td style="padding: 10px;">{{ optional($row->area)->nama_area ?? 'Pusat' }}</td>
                             <td style="padding: 10px;">{{ $row->keterangan }}</td>
+
+                            <!-- [BARU] Tampilkan Tombol Bukti Jika Ada -->
+                            <td style="text-align: center; padding: 10px;">
+                                @if($row->nota)
+                                    <a href="{{ asset('uploads/nota/' . $row->nota) }}" target="_blank"
+                                        style="background: #3498db; color: white; padding: 4px 8px; text-decoration: none; border-radius: 3px; font-size: 11px; display: inline-block;">Lihat</a>
+                                @else
+                                    <span style="color: #95a5a6; font-size: 11px; font-style: italic;">-</span>
+                                @endif
+                            </td>
+
                             <td class="text-right" style="padding: 10px; color: #e74c3c; font-weight: 600;">
                                 {{ $row->kredit > 0 ? 'Rp ' . number_format($row->kredit, 0, ',', '.') : '-' }}
                             </td>
@@ -150,7 +163,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" style="text-align: center; padding: 20px; color: #7f8c8d;">Belum ada data kasbon.
+                            <td colspan="11" style="text-align: center; padding: 20px; color: #7f8c8d;">Belum ada data kasbon.
                             </td>
                         </tr>
                     @endforelse
@@ -158,7 +171,8 @@
                 <tfoot>
                     <tr
                         style="background-color: #fce4ec; font-weight: bold; border-top: 2px solid #333; border-bottom: 2px solid #333;">
-                        <td colspan="6" class="text-right" style="padding: 10px;">TOTAL KASBON:</td>
+                        <!-- [BARU] Colspan diubah dari 6 jadi 7 karena ketambahan kolom Bukti Nota -->
+                        <td colspan="7" class="text-right" style="padding: 10px;">TOTAL KASBON:</td>
                         <td class="text-right" style="padding: 10px; color: #e74c3c;">
                             Rp {{ number_format($kasbon->sum('kredit'), 0, ',', '.') }}</td>
                         <td class="text-right" style="padding: 10px; color: #27ae60;">

@@ -401,65 +401,58 @@ class LaporanController extends Controller
         $request->validate([
             'tanggal' => 'required|date',
             'jenis_transaksi' => 'required|in:debet,kredit,mutasi',
-            // Kategori wajib diisi, KECUALI jika jenis transaksinya adalah mutasi
             'kategori_id' => 'required_unless:jenis_transaksi,mutasi',
             'metode_pembayaran_id' => 'required',
             'keterangan' => 'required|string|max:255',
             'nominal' => 'required|numeric|min:0',
+            'nota' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // [BARU] Validasi Nota Maks 2MB
         ]);
         $tglFormat = \Carbon\Carbon::parse($request->tanggal)->format('d/m/Y');
 
-        // ====================================================================
-        // 2. LOGIKA KHUSUS JIKA TRANSAKSI ADALAH MUTASI / SETOR TUNAI
-        // ====================================================================
+        // [BARU] Proses Upload Gambar Nota
+        $namaFileNota = null;
+        if ($request->hasFile('nota')) {
+            $file = $request->file('nota');
+            $namaFileNota = 'nota_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            // Simpan di folder public/uploads/nota biar aman tanpa symlink
+            $file->move(public_path('uploads/nota'), $namaFileNota);
+        }
+
         if ($request->jenis_transaksi === 'mutasi') {
-
             $this->recordLog('Mutasi Bank', 'Setor tunai ke bank tgl ' . $tglFormat . ' senilai Rp ' . number_format($request->nominal, 0, ',', '.') . ' (' . $request->keterangan . ')');
-
-            // [DIPERBAIKI] Pastikan kategori Mutasi digunakan agar tidak tercampur laporan laba-rugi
             $kategoriMutasi = \App\Models\Kategori::firstOrCreate(['nama_kategori' => 'Mutasi']);
-            $idKatMutasi = $kategoriMutasi->id;
 
-            /*
-               Aksi A: Kas Keluar (Mengurangi Cash Fisik)
-               Catatan: Asumsi angka '1' adalah ID untuk metode "Cash/Tunai".
-            */
             Transaksi::create([
                 'tanggal' => $request->tanggal,
-                'kategori_id' => $idKatMutasi, // Menggunakan kategori khusus mutasi
-                'metode_pembayaran_id' => 1, // <-- Pastikan ini ID untuk "Cash"
+                'kategori_id' => $kategoriMutasi->id,
+                'metode_pembayaran_id' => 1,
                 'area_id' => null,
                 'user_id' => auth()->id(),
                 'keterangan' => '[MUTASI KELUAR] ' . $request->keterangan,
                 'debet' => 0,
-                'kredit' => $request->nominal, // Masuk kredit = kas keluar (berkurang)
+                'kredit' => $request->nominal,
+                'nota' => $namaFileNota, // [BARU] Simpan nota
             ]);
 
-            /*
-               Aksi B: Masuk ke Bank (Menambah Saldo Bank PT)
-               metode_pembayaran_id diambil dari bank tujuan yang dipilih di form.
-            */
             Transaksi::create([
                 'tanggal' => $request->tanggal,
-                'kategori_id' => $idKatMutasi, // Menggunakan kategori khusus mutasi
-                'metode_pembayaran_id' => $request->metode_pembayaran_id, // ID Bank Tujuan
+                'kategori_id' => $kategoriMutasi->id,
+                'metode_pembayaran_id' => $request->metode_pembayaran_id,
                 'area_id' => null,
                 'user_id' => auth()->id(),
                 'keterangan' => '[MUTASI MASUK] ' . $request->keterangan,
-                'debet' => $request->nominal, // Masuk debet = bank bertambah
+                'debet' => $request->nominal,
                 'kredit' => 0,
             ]);
 
-            return redirect('/laporan/keuangan')->with('success', 'Berhasil! Setor tunai tercatat, Cash dipotong & Saldo Bank bertambah.');
+            return redirect('/laporan/keuangan')->with('success', 'Berhasil! Setor tunai tercatat.');
         }
 
-        // ====================================================================
-        // 3. LOGIKA NORMAL (PEMASUKAN & PENGELUARAN BIASA)
-        // ====================================================================
+        // LOGIKA NORMAL
         $debet = $request->jenis_transaksi === 'debet' ? $request->nominal : 0;
         $kredit = $request->jenis_transaksi === 'kredit' ? $request->nominal : 0;
 
-        $this->recordLog('Tambah Transaksi', 'Menambahkan transaksi tgl ' . $tglFormat . ' senilai Rp ' . number_format($request->nominal, 0, ',', '.') . ' (' . $request->keterangan . ')');
+        $this->recordLog('Tambah Transaksi', 'Menambahkan transaksi senilai Rp ' . number_format($request->nominal, 0, ',', '.') . ' (' . $request->keterangan . ')');
 
         Transaksi::create([
             'tanggal' => $request->tanggal,
@@ -470,11 +463,11 @@ class LaporanController extends Controller
             'keterangan' => $request->keterangan,
             'debet' => $debet,
             'kredit' => $kredit,
+            'nota' => $namaFileNota, // [BARU] Simpan nota ke DB
         ]);
 
-        return redirect('/laporan/keuangan')->with('success', 'Data transaksi berhasil ditambahkan!');
+        return redirect('/laporan/keuangan')->with('success', 'Data transaksi & nota berhasil ditambahkan!');
     }
-
     public function menuInput()
     {
         return view('laporan.menu_input');
@@ -633,16 +626,41 @@ class LaporanController extends Controller
     {
         $request->validate([
             'tanggal' => 'required|date',
-            'jenis_transaksi' => 'required|in:debet,kredit',
-            'kategori_id' => 'required',
+            'jenis_transaksi' => 'required|in:debet,kredit,mutasi', // Sesuaikan jika jenis mutasi diizinkan saat edit
+            'kategori_id' => 'required_unless:jenis_transaksi,mutasi',
             'metode_pembayaran_id' => 'required',
             'keterangan' => 'required|string|max:255',
             'nominal' => 'required|numeric|min:0',
+            'nota' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
+
+        $trx = Transaksi::findOrFail($id);
 
         $debet = $request->jenis_transaksi === 'debet' ? $request->nominal : 0;
         $kredit = $request->jenis_transaksi === 'kredit' ? $request->nominal : 0;
         $this->recordLog('Edit Transaksi', 'Memperbarui data transaksi ID: ' . $id . ' (' . $request->keterangan . ')');
+
+        // ========================================================
+        // [BARU] LOGIKA HAPUS ATAU GANTI NOTA LAMA
+        // ========================================================
+        $namaFileNota = $trx->nota;
+
+        // Jika checkbox "hapus_nota" dicentang ATAU user mengupload nota baru
+        if ($request->has('hapus_nota') || $request->hasFile('nota')) {
+            // Hapus file fisik lama dari folder jika ada
+            if ($trx->nota && file_exists(public_path('uploads/nota/' . $trx->nota))) {
+                unlink(public_path('uploads/nota/' . $trx->nota));
+            }
+            $namaFileNota = null; // Set null di database secara default
+        }
+
+        // Jika user mengupload file nota yang BARU
+        if ($request->hasFile('nota')) {
+            $file = $request->file('nota');
+            $namaFileNota = 'nota_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/nota'), $namaFileNota);
+        }
+        // ========================================================
 
         Transaksi::where('id', $id)->update([
             'tanggal' => $request->tanggal,
@@ -653,11 +671,11 @@ class LaporanController extends Controller
             'keterangan' => $request->keterangan,
             'debet' => $debet,
             'kredit' => $kredit,
+            'nota' => $namaFileNota, // Menyimpan nama file baru atau null jika dihapus
         ]);
 
-        return back()->with('success', 'Data transaksi berhasil diperbarui!');
+        return back()->with('success', 'Data transaksi & nota berhasil diperbarui!');
     }
-
     public function destroyTransaksi($id)
     {
         $trx = Transaksi::find($id);
@@ -675,7 +693,21 @@ class LaporanController extends Controller
             // Bersihkan teks tag mutasi untuk mencari pasangannya berdasarkan keterangan asli & nominal yang sama
             $keteranganAsli = str_replace(['[MUTASI MASUK] ', '[MUTASI KELUAR] '], '', $trx->keterangan);
 
-            // Hapus SEMUA transaksi lain yang punya tanggal, nominal, dan keterangan dasar yang sama persis
+            // [BARU] Ambil semua transaksi mutasi terkait yang memiliki file nota, lalu hapus file fisiknya
+            $transaksiMutasiList = Transaksi::where('tanggal', $trx->tanggal)
+                ->where(function ($query) use ($nominalTarget) {
+                    $query->where('debet', $nominalTarget)->orWhere('kredit', $nominalTarget);
+                })
+                ->where('keterangan', 'like', '%' . $keteranganAsli . '%')
+                ->get();
+
+            foreach ($transaksiMutasiList as $m) {
+                if ($m->nota && file_exists(public_path('uploads/nota/' . $m->nota))) {
+                    unlink(public_path('uploads/nota/' . $m->nota));
+                }
+            }
+
+            // Hapus SEMUA transaksi lain yang punya tanggal, nominal, dan keterangan dasar yang sama persis dari database
             Transaksi::where('tanggal', $trx->tanggal)
                 ->where(function ($query) use ($nominalTarget) {
                     $query->where('debet', $nominalTarget)->orWhere('kredit', $nominalTarget);
@@ -685,6 +717,11 @@ class LaporanController extends Controller
 
             $deskripsiLog = 'Menghapus Mutasi Setor Tunai: ' . $keteranganAsli;
         } else {
+            // [BARU] Hapus file fisik nota tunggal jika ada sebelum datanya dihapus
+            if ($trx->nota && file_exists(public_path('uploads/nota/' . $trx->nota))) {
+                unlink(public_path('uploads/nota/' . $trx->nota));
+            }
+
             // Hapus transaksi normal biasa (Pemasukan / Pengeluaran tunggal)
             $nominalNormal = $trx->debet > 0 ? $trx->debet : $trx->kredit;
             $deskripsiLog = 'Menghapus transaksi: ' . $trx->keterangan . ' (Rp ' . number_format($nominalNormal, 0, ',', '.') . ')';
@@ -693,7 +730,7 @@ class LaporanController extends Controller
 
         $this->recordLog('Hapus Transaksi', $deskripsiLog);
 
-        return back()->with('success', 'Data transaksi berhasil dihapus bersih!');
+        return back()->with('success', 'Data transaksi beserta file notanya berhasil dihapus bersih!');
     }
 
     public function exportExcel(Request $request)
@@ -1244,5 +1281,21 @@ class LaporanController extends Controller
     {
         \DB::table('sessions')->where('id', $id)->delete();
         return back()->with('success', 'Sesi pengguna berhasil diputus (Force Logout)!');
+    }
+    public function exportNotaPdf(Request $request)
+    {
+        $mulai = $request->input('tanggal_mulai', \Carbon\Carbon::now()->startOfMonth()->toDateString());
+        $sampai = $request->input('tanggal_selesai', \Carbon\Carbon::now()->endOfMonth()->toDateString());
+
+        // Ambil SEMUA transaksi (Pengeluaran maupun Kasbon Teknisi) yang punya pengeluaran (kredit > 0) dan ada notanya
+        $transaksi = \App\Models\Transaksi::whereBetween('tanggal', [$mulai, $sampai])
+            ->where('kredit', '>', 0)
+            ->whereNotNull('nota')
+            ->where('nota', '!=', '')
+            ->with(['kategori', 'user'])
+            ->orderBy('tanggal', 'asc')
+            ->get();
+
+        return view('laporan.export_nota_pdf', compact('transaksi', 'mulai', 'sampai'));
     }
 }

@@ -3,34 +3,36 @@
 
 @section('content')
     <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 80vh;
-            padding: 20px;
-        ">
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                min-height: 80vh;
+                                padding: 20px;
+                            ">
         <div style="
-                width: 100%;
-                max-width: 750px;
-                background: #fff;
-                padding: 35px 40px;
-                border-radius: 12px;
-                box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-            ">
+                                    width: 100%;
+                                    max-width: 750px;
+                                    background: #fff;
+                                    padding: 35px 40px;
+                                    border-radius: 12px;
+                                    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+                                ">
             <h2 style="
-                    font-size: 22px;
-                    font-weight: 600;
-                    color: #2c3e50;
-                    margin-top: 0;
-                    margin-bottom: 25px;
-                    text-align: center;
-                    border-bottom: 2px solid #ecf0f1;
-                    padding-bottom: 15px;
-                ">
+                                        font-size: 22px;
+                                        font-weight: 600;
+                                        color: #2c3e50;
+                                        margin-top: 0;
+                                        margin-bottom: 25px;
+                                        text-align: center;
+                                        border-bottom: 2px solid #ecf0f1;
+                                        padding-bottom: 15px;
+                                    ">
                 Edit Data Transaksi
             </h2>
 
-            <form action="{{ url('/laporan/transaksi/update/' . $transaksi->id) }}" method="POST">
+            <!-- [BARU] Tambahkan enctype="multipart/form-data" -->
+            <form action="{{ url('/laporan/transaksi/update/' . $transaksi->id) }}" method="POST"
+                enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -146,35 +148,67 @@
                         style="width: 100%; padding: 10px 14px; border: 1px solid #dce1e8; border-radius: 6px; font-size: 15px; transition: border-color 0.2s;">
                 </div>
 
+                <!-- [BARU] BAGIAN UPLOAD & PREVIEW NOTA FISIK -->
+                <!-- BAGIAN UPLOAD & PREVIEW NOTA FISIK -->
+                <div id="div_nota"
+                    style="margin-bottom: 25px; padding: 15px; border: 1px dashed #3498db; background-color: #ebf5fb; border-radius: 6px; display: none;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #2980b9;">
+                        Upload / Kelola Bukti Nota Fisik
+                    </label>
+
+                    @if($transaksi->nota)
+                        <div
+                            style="margin-bottom: 12px; padding: 10px; background: #fff; border-radius: 4px; border: 1px solid #dce1e8;">
+                            <p style="font-size: 12px; color: #7f8c8d; margin-top: 0; margin-bottom: 8px; font-weight: bold;">
+                                Nota saat ini terlampir:</p>
+                            <img src="{{ asset('uploads/nota/' . $transaksi->nota) }}" alt="Nota Bukti"
+                                style="max-height: 120px; border-radius: 4px; border: 1px solid #ccc; object-fit: contain; display: block; margin-bottom: 8px;">
+
+                            <!-- [BARU] Checkbox untuk Hapus Nota -->
+                            <label
+                                style="font-size: 13px; color: #c0392b; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                                <input type="checkbox" name="hapus_nota" value="1" style="width: 15px; height: 15px;">
+                                Hapus / Buang nota ini tanpa menggantinya
+                            </label>
+                        </div>
+                    @endif
+
+                    <input type="file" name="nota" id="nota" class="form-control" accept="image/jpeg, image/png, image/jpg"
+                        style="width: 100%; padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; background: #fff;">
+                    <small style="color: #7f8c8d; display: block; margin-top: 5px;">*Format gambar (JPG, PNG) Maks
+                        2MB.</small>
+                </div>
+
                 <!-- Tombol Aksi -->
                 <div style="display: flex; gap: 12px;">
                     <button type="submit" style="
-                            background: #f39c12;
-                            color: white;
-                            border: none;
-                            padding: 12px 24px;
-                            border-radius: 6px;
-                            font-weight: 600;
-                            font-size: 15px;
-                            cursor: pointer;
-                            flex: 1;
-                            transition: background 0.2s;
-                        " onmouseover="this.style.background='#e08e0b'" onmouseout="this.style.background='#f39c12'">
+                                                background: #f39c12;
+                                                color: white;
+                                                border: none;
+                                                padding: 12px 24px;
+                                                border-radius: 6px;
+                                                font-weight: 600;
+                                                font-size: 15px;
+                                                cursor: pointer;
+                                                flex: 1;
+                                                transition: background 0.2s;
+                                            " onmouseover="this.style.background='#e08e0b'"
+                        onmouseout="this.style.background='#f39c12'">
                         Simpan Perubahan
                     </button>
-                    <a href="{{ url('/laporan/keuangan') }}" style="
-                            text-decoration: none;
-                            background: #95a5a6;
-                            color: white;
-                            padding: 12px 24px;
-                            border-radius: 6px;
-                            font-weight: 600;
-                            font-size: 15px;
-                            text-align: center;
-                            flex: 0.5;
-                            transition: background 0.2s;
-                        " onmouseover="this.style.background='#7f8c8d'" onmouseout="this.style.background='#95a5a6'">
-                        Batal
+                    <a href="{{ url()->previous() }}" style="
+                        text-decoration: none;
+                        background: #95a5a6;
+                        color: white;
+                        padding: 12px 24px;
+                        border-radius: 6px;
+                        font-weight: 600;
+                        font-size: 15px;
+                        text-align: center;
+                        flex: 0.5;
+                        transition: background 0.2s;
+                    " onmouseover="this.style.background='#7f8c8d'" onmouseout="this.style.background='#95a5a6'">
+                        Batal / Kembali
                     </a>
                 </div>
             </form>
@@ -189,6 +223,7 @@
             const kategoriSelect = document.getElementById('kategori_id');
             const labelMetode = document.getElementById('label-metode');
             const metodeSelect = document.getElementById('metode_pembayaran_id');
+            const divNota = document.getElementById('div_nota'); // Elemen Nota
 
             if (jenis === 'mutasi') {
                 kategoriDiv.style.display = 'none';
@@ -196,6 +231,7 @@
                 kategoriSelect.value = ''; // kosongkan jika mutasi
 
                 labelMetode.innerText = 'Pilih Tujuan Bank (Setor Tunai)';
+                divNota.style.display = 'block'; // Tampilkan form nota (opsional buat mutasi)
 
                 // Sembunyikan opsi metode cash/tunai
                 for (let option of metodeSelect.options) {
@@ -204,11 +240,25 @@
                         if (option.selected) metodeSelect.value = ''; // reset jika tadinya cash
                     }
                 }
-            } else {
+            } else if (jenis === 'kredit') {
+                // KONDISI KREDIT / PENGELUARAN / KASBON
                 kategoriDiv.style.display = 'block';
                 kategoriSelect.setAttribute('required', 'required');
+                labelMetode.innerText = 'Sumber Dana (Uang diambil dari mana?)';
 
+                divNota.style.display = 'block'; // Tampilkan form upload nota fisik
+
+                // Munculkan kembali semua opsi metode
+                for (let option of metodeSelect.options) {
+                    option.style.display = 'block';
+                }
+            } else {
+                // KONDISI DEBET / PEMASUKAN
+                kategoriDiv.style.display = 'block';
+                kategoriSelect.setAttribute('required', 'required');
                 labelMetode.innerText = 'Metode Pembayaran';
+
+                divNota.style.display = 'none'; // Sembunyikan untuk pemasukan biasa
 
                 // Munculkan kembali semua opsi metode
                 for (let option of metodeSelect.options) {
@@ -217,7 +267,7 @@
             }
         }
 
-        // Jalankan saat halaman pertama kali dimuat (jika mode awal sudah mutasi)
+        // Jalankan saat halaman pertama kali dimuat
         document.addEventListener("DOMContentLoaded", function () {
             toggleJenisTransaksi();
         });

@@ -80,6 +80,9 @@ Route::middleware(['auth', 'firewall.ip'])->group(function () {
     Route::put('/laporan/profile', [LaporanController::class, 'updateProfile']);
 
     Route::post('/laporan/mutasi-bank/store', [LaporanController::class, 'storeMutasiBank']);
+
+    //EXPORT NOTA
+    Route::get('/laporan/keuangan/export-nota', [\App\Http\Controllers\LaporanController::class, 'exportNotaPdf'])->name('laporan.export.nota');
 });
 
 // Redirect default ke laporan keuangan

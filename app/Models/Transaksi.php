@@ -19,7 +19,8 @@ class Transaksi extends Model
         'user_id',
         'keterangan',
         'debet',
-        'kredit'
+        'kredit',
+        'nota'
     ];
 
     // Relasi ke Kategori
